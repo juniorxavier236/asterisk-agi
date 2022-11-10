@@ -1,58 +1,42 @@
-# ding-dong
+# asterisk-agi
 
-[![Build Status](https://travis-ci.org/antirek/ding-dong.svg?branch=master)](https://travis-ci.org/antirek/ding-dong)
 
-Create AGI server with ding-dong. Use with Asterisk for fast telephony apps. 
+
+node.js lib for Fast AGI (Asterisk Gateway Interface) server
 
 [Fork of node-agi](http://github.com/brianc/node-agi)
 
-stable version 0.1.1
 
-unstable version 0.1.5
-
-
-Use ding-dong
+Use asterisk-agi
 =============
-
-[voicer](http://github.com/antirek/voicer) - AGI voice recognizer for Asterisk (use Yandex and Google speech recognizers)
-
-[agi-number-archer](http://github.com/antirek/agi-number-archer) - AGI server for find region code of phone number (Russia)
-
-[lcr-finder](http://github.com/antirek/lcr-finder) - least cost router for Asterisk
-
 
 
 ## Install
 
 ```
-npm install ding-dong [--save]
+npm install ding-dong
 
 ```
 
-
-## Usage
-
-### Write app.js and run it
-
 `````javascript
 
-var AGIServer = require('ding-dong');
+const AGIServer = require('asterisk-agi');
 
-var handler = function (context) {
+const handler = (context) => {
     context.onEvent('variables')
-        .then(function (vars) {
+        .then((vars) => {
             return context.streamFile('beep');
         })
-        .then(function (result) {
+        .then((result) => {
             return context.setVariable('RECOGNITION_RESULT', 'I\'m your father, Luc');
         })
-        .then(function (result) {       
-            return context.end();
+        .then((result) => {
+            return context.close();
         });
 };
 
-var agi = new AGIServer(handler);
-agi.start(3000);
+var agi = new AGIServer(handler, {port: 3000});
+agi.init();
 
 `````
 
@@ -62,9 +46,6 @@ agi.start(3000);
 [default]
 exten = > 1000,1,AGI(agi://localhost:3000)
 `````
-
-### And call to 1000 and view asterisk output. Profit!
-
 
 ## API 
 
