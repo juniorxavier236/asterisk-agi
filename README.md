@@ -1,32 +1,25 @@
-# ding-dong
+# asterisk-agi
 
-[![Build Status](https://travis-ci.org/antirek/ding-dong.svg?branch=master)](https://travis-ci.org/antirek/ding-dong)
 
 node.js lib for Fast AGI (Asterisk Gateway Interface) server
 
 [Fork of node-agi](http://github.com/brianc/node-agi)
 
 
-Use ding-dong
+Use asterisk-agi
 =============
-
-[voicer](http://github.com/antirek/voicer) - AGI voice recognizer for Asterisk (use Yandex and Google speech recognizers)
-
-[agi-number-archer](http://github.com/antirek/agi-number-archer) - AGI server for find region code of phone number (Russia)
-
-[lcr-finder](http://github.com/antirek/lcr-finder) - least cost router for Asterisk
 
 
 ## Install
 
 ```
-npm install ding-dong
+npm install asterisk-agi
 
 ```
 
 `````javascript
 
-const AGIServer = require('ding-dong');
+const AGIServer = require('asterisk-agi');
 
 const handler = (context) => {
     context.onEvent('variables')
