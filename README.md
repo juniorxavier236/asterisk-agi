@@ -14,7 +14,7 @@ Use asterisk-agi
 ## Install
 
 ```
-npm install ding-dong
+npm install asterisk-agi
 
 ```
 
