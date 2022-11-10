@@ -1,21 +1,21 @@
-const MemoryStream = require('memorystream');
-const AgiServer = require('./../lib');
-const expect = require('expect.js');
-const Context = require('./../lib/context');
-const state = require('./../lib/state');
+var MemoryStream = require('memorystream');
+var agi = require('./../lib')
+var expect = require('expect.js');
+var Context = require('./../lib/context');
+var state = require('./../lib/state');
 
-// helpers
-const writeVars = function(stream) {
+//helpers
+var writeVars = function(stream) {
   stream.write('agi_network: yes\n');
   stream.write('agi_uniqueid: 13507138.14\n');
   stream.write('agi_arg_1: test\n');
   stream.write('\n\n');
 };
 
-const context = function(cb) {
-  const stream = new MemoryStream();
-  const ctx = new Context(stream);
-  // TODO nasty
+var context = function(cb) {
+  var stream = new MemoryStream();
+  var ctx = new Context(stream);
+  //TODO nasty
   ctx.send = function(msg, cb) {
     ctx.pending = cb;
     ctx.sent = ctx.sent || [];
@@ -25,14 +25,14 @@ const context = function(cb) {
   ctx.once('variables', function(vars) {
     cb(ctx);
   });
-
+  
   writeVars(stream);
 };
 
 describe('Context', function() {
-  beforeEach(function(done) {
-    const self = this;
-    context(function(context) {
+  beforeEach(function (done) {
+    var self = this;
+    context(function (context) {
       self.context = context;
       done();
     });
@@ -40,12 +40,13 @@ describe('Context', function() {
 
   describe('parsing variables', function() {
     it('works', function(done) {
-      const vars = this.context.variables;
+      var vars = this.context.variables;
       expect(vars['agi_network']).ok();
       expect(vars['agi_network']).to.eql('yes');
       expect(vars['agi_uniqueid']).to.eql('13507138.14');
       expect(vars['agi_arg_1']).to.eql('test');
       done();
+
     });
 
     it('puts context into waiting state', function() {
@@ -71,8 +72,8 @@ describe('Context', function() {
   describe('command flow', function() {
     describe('success', function() {
       it('emits proper repsonse', function(done) {
-        const context = this.context;
-
+        var context = this.context;
+        
         process.nextTick(function() {
           context.exec('test', 'bang', 'another');
           context.stream.write('200');
@@ -84,25 +85,27 @@ describe('Context', function() {
           expect(msg.result).to.eql('0');
           done();
         });
+
       });
 
       it('invokes callback with response', function(done) {
-        const context = this.context;
+        var context = this.context;
 
-        process.nextTick(function() {
+        process.nextTick(function(){
           context.stream.write('200 result=0');
           context.stream.write('\n');
           context.stream.write('200 result=0');
           context.stream.write('\n');
         });
 
-        context.exec('test', 'boom').then(function() {
+        context.exec('test', 'boom').then(function(){
           done();
         });
+        
       });
 
       it('includes the response value', function(done) {
-        const context = this.context;
+        var context = this.context;
 
         process.nextTick(function() {
           context.exec('test', 'bang', 'another');
@@ -116,29 +119,31 @@ describe('Context', function() {
           expect(msg.value).to.eql('a value');
           done();
         });
+
       });
     });
 
     describe('two commands', function(done) {
+
       it('invokes two callbacks', function(done) {
-        const context = this.context;
+        var context = this.context;
 
         process.nextTick(function() {
           context.stream.write('200 result=0\n');
         });
 
         context.exec('test')
-            .then(function(res) {
-              expect(res.result).to.eql('0');
-              process.nextTick(function() {
-                context.stream.write('200 result=1\n');
-              });
-              return context.exec('test 2');
-            })
-            .then(function(res) {
-              expect(res.result).to.eql('1');
-              done();
+          .then(function (res) {
+            expect(res.result).to.eql('0');
+            process.nextTick(function() {
+              context.stream.write('200 result=1\n');
             });
+            return context.exec('test 2');
+          })
+          .then(function (res) {
+            expect(res.result).to.eql('1');
+            done();
+          });
       });
     });
   });
@@ -151,13 +156,13 @@ describe('Context', function() {
 
     describe('in command response', function() {
       it('is passed to callback', function(done) {
-        const context = this.context;
+        var context = this.context;
         this.context.exec('whatever', function(err, res) {
         });
         this.context.on('hangup', done);
         process.nextTick(function() {
           context.stream.write('200 result=-1\nHANGUP\n');
-        });
+        })
       });
     });
   });
@@ -165,32 +170,28 @@ describe('Context', function() {
   describe('databaseDel', function() {
     it('sends correct command', function() {
       this.context.databaseDel('family', 'test');
-      expect(this.context.sent.join(''))
-          .to.eql('DATABASE DEL family test\n');
+      expect(this.context.sent.join('')).to.eql('DATABASE DEL family test\n');
     });
   });
 
   describe('databaseDelTree', function() {
     it('sends correct command', function() {
       this.context.databaseDelTree('family', 'test');
-      expect(this.context.sent.join(''))
-          .to.eql('DATABASE DELTREE family test\n');
+      expect(this.context.sent.join('')).to.eql('DATABASE DELTREE family test\n');
     });
   });
 
   describe('databaseGet', function() {
     it('sends correct command', function() {
       this.context.databaseGet('family', 'test');
-      expect(this.context.sent.join(''))
-          .to.eql('DATABASE GET family test\n');
+      expect(this.context.sent.join('')).to.eql('DATABASE GET family test\n');
     });
   });
 
   describe('databasePut', function() {
     it('sends correct command', function() {
       this.context.databasePut('family', 'test', 'value');
-      expect(this.context.sent.join('')
-      ).to.eql('DATABASE PUT family test value\n');
+      expect(this.context.sent.join('')).to.eql('DATABASE PUT family test value\n');
     });
   });
 
@@ -211,24 +212,21 @@ describe('Context', function() {
   describe('speechActivateGrammar', function() {
     it('sends correct command', function() {
       this.context.speechActivateGrammar('name');
-      expect(this.context.sent.join(''))
-          .to.eql('SPEECH ACTIVATE GRAMMAR name\n');
+      expect(this.context.sent.join('')).to.eql('SPEECH ACTIVATE GRAMMAR name\n');
     });
   });
 
   describe('speechDeactivateGrammar', function() {
     it('sends correct command', function() {
       this.context.speechDeactivateGrammar('name');
-      expect(this.context.sent.join(''))
-          .to.eql('SPEECH DEACTIVATE GRAMMAR name\n');
+      expect(this.context.sent.join('')).to.eql('SPEECH DEACTIVATE GRAMMAR name\n');
     });
   });
 
   describe('speechLoadGrammar', function() {
     it('sends correct command', function() {
       this.context.speechLoadGrammar('name', 'path');
-      expect(this.context.sent.join(''))
-          .to.eql('SPEECH LOAD GRAMMAR name path\n');
+      expect(this.context.sent.join('')).to.eql('SPEECH LOAD GRAMMAR name path\n');
     });
   });
 
@@ -249,16 +247,14 @@ describe('Context', function() {
   describe('speechRecognize', function() {
     it('sends correct command', function() {
       this.context.speechRecognize('prompt', 'timeout', 'offset');
-      expect(this.context.sent.join(''))
-          .to.eql('SPEECH RECOGNIZE prompt timeout offset\n');
+      expect(this.context.sent.join('')).to.eql('SPEECH RECOGNIZE prompt timeout offset\n');
     });
   });
 
   describe('setVariable', function() {
     it('sends correct command', function() {
       this.context.setVariable('test', 'test test test');
-      expect(this.context.sent.join(''))
-          .to.eql('SET VARIABLE test "test test test"\n');
+      expect(this.context.sent.join('')).to.eql('SET VARIABLE test "test test test"\n');
     });
   });
 
@@ -314,8 +310,7 @@ describe('Context', function() {
   describe('getFullVariable', function() {
     it('sends correct command', function() {
       this.context.getFullVariable('test', 'test');
-      expect(this.context.sent.join(''))
-          .to.eql('GET FULL VARIABLE test test\n');
+      expect(this.context.sent.join('')).to.eql('GET FULL VARIABLE test test\n');
     });
   });
 
@@ -337,7 +332,7 @@ describe('Context', function() {
     it('sends correct command', function() {
       this.context.getVariable('test');
       expect(this.context.sent.join('')).to.eql('GET VARIABLE test\n');
-    });
+    });    
   });
 
   describe('receiveChar', function() {
@@ -355,100 +350,97 @@ describe('Context', function() {
   });
 
   describe('stream file', function() {
-    it('sends', function() {
+    it('sends', function () {
       this.context.streamFile('test', '1234567890#*', function() {});
-      expect(this.context.sent.join(''))
-          .to.eql('STREAM FILE "test" "1234567890#*"\n');
-    });
+      expect(this.context.sent.join('')).to.eql('STREAM FILE "test" "1234567890#*"\n');
+    });    
   });
 
   describe('record file', function() {
-    it('record', function() {
+    it('record', function () {
       this.context.recordFile('test', 'wav', '#', 10, 0, 1, 2, function() {});
-      expect(this.context.sent.join(''))
-          .to.eql('RECORD FILE "test" wav # 10000 0 1 2\n');
-    });
+      expect(this.context.sent.join('')).to.eql('RECORD FILE "test" wav # 10000 0 1 2\n');
+    });    
   });
 
   describe('say number', function() {
-    it('say number', function() {
+    it('say number', function () {
       this.context.sayNumber('1234', '#', function() {});
       expect(this.context.sent.join('')).to.eql('SAY NUMBER 1234 "#"\n');
-    });
+    });    
   });
 
   describe('say alpha', function() {
-    it('say alpha', function() {
+    it('say alpha', function () {
       this.context.sayAlpha('1234', '#', function() {});
       expect(this.context.sent.join('')).to.eql('SAY ALPHA 1234 "#"\n');
-    });
+    });    
   });
 
   describe('say date', function() {
-    it('say date', function() {
+    it('say date', function () {
       this.context.sayDate('1234', '#', function() {});
       expect(this.context.sent.join('')).to.eql('SAY DATE 1234 "#"\n');
-    });
+    });    
   });
 
   describe('say time', function() {
-    it('say time', function() {
+    it('say time', function () {
       this.context.sayTime('1234', '#', function() {});
       expect(this.context.sent.join('')).to.eql('SAY TIME 1234 "#"\n');
-    });
+    });    
   });
 
   describe('say datetime', function() {
-    it('say datetime', function() {
-      this.context.sayDateTime('1234', '#', 'Y', 'DST', function() {});
-      expect(this.context.sent.join(''))
-          .to.eql('SAY DATETIME 1234 "#" Y DST\n');
+    it('say datetime', function () {
+      this.context.sayDateTime('1234', '#', 'Y', 'DST',function() {});
+      expect(this.context.sent.join('')).to.eql('SAY DATETIME 1234 "#" Y DST\n');
     });
   });
 
   describe('say phonetic', function() {
-    it('say phonetic', function() {
+    it('say phonetic', function () {
       this.context.sayPhonetic('1234ABCD', '#', function() {});
       expect(this.context.sent.join('')).to.eql('SAY PHONETIC 1234ABCD "#"\n');
-    });
+    });    
   });
 
   describe('context dial', function() {
     it('context dial', function() {
       this.context.dial('123', 10, 'A', function() {});
       expect(this.context.sent.join('')).to.eql('EXEC Dial 123,10,A\n');
-    });
+    });    
   });
 
   describe('say digits', function() {
-    it('say digits', function() {
-      this.context.sayDigits('1234', '#');
+    it('say digits', function () {
+      this.context.sayDigits('1234', '#', function() {});
       expect(this.context.sent.join('')).to.eql('SAY DIGITS 1234 "#"\n');
-    });
+    });    
   });
 
   describe('send image', function() {
-    it('send image', function() {
-      this.context.sendImage('1234');
+    it('send image', function () {
+      this.context.sendImage('1234', function() {});
       expect(this.context.sent.join('')).to.eql('SEND IMAGE 1234\n');
-    });
+    });    
   });
 
   describe('send text', function() {
-    it('send text', function() {
+    it('send text', function () {
       this.context.sendText('1234');
       expect(this.context.sent.join('')).to.eql('SEND TEXT "1234"\n');
-    });
+    });    
   });
 
-  describe('waitForDigit', function() {
+  describe('waitForDigit', function () {
     it('sends with default timeout', function() {
       this.context.waitForDigit(5000);
       expect(this.context.sent.join('')).to.eql('WAIT FOR DIGIT 5000\n');
     });
 
     it('sends with specified timeout', function() {
-      this.context.waitForDigit(-1);
+      this.context.waitForDigit(-1, function() {});
       expect(this.context.sent.join('')).to.eql('WAIT FOR DIGIT -1\n');
     });
   });
@@ -483,7 +475,7 @@ describe('Context', function() {
 
   describe('tddMode', function() {
     it('sends correct command', function() {
-      this.context.tddMode('on');
+      this.context.tddMode("on");
       expect(this.context.sent.join('')).to.eql('TDD MODE on\n');
     });
   });
@@ -497,19 +489,19 @@ describe('Context', function() {
 
   describe('gosub', function() {
     it('sends correct command', function() {
-      this.context.gosub('out', '241', '6', 'do');
+      this.context.gosub('out','241','6','do');
       expect(this.context.sent.join('')).to.eql('GOSUB out 241 6 do\n');
     });
   });
 
   describe('events', function() {
-    describe('error', function() {
+    describe('error', function () {
       it('is emitted when socket emits error', function(done) {
         this.context.on('error', function(err) {
           expect(err).to.eql('test');
           done();
         });
-        this.context.stream.emit('error', 'test');
+        this.context.stream.emit('error', "test");
       });
     });
 
@@ -526,22 +518,20 @@ describe('Context', function() {
   });
 });
 
-describe('AgiServer#createServer', function() {
+describe('agi#createServer', function() {
   it('returns instance of net.Server', function() {
-    const net = require('net');
-    const agiServer = new AgiServer(() => {});
-    expect(agiServer.server instanceof net.Server).ok();
+    var net = require('net');
+    var server = (new agi()).start(3000);
+    expect(server instanceof net.Server).ok();
+
   });
 
   it('invokes callback when a new connection is established', function(done) {
-    const agiServer = new AgiServer(function(context) {
+    var server = new agi(function(context) {
       expect(context instanceof Context);
       done();
-    }, {
-      port: 3001,
-    });
-    agiServer.init();
+    }).start(3001);
 
-    agiServer.server.emit('connection', new MemoryStream());
+    server.emit('connection', new MemoryStream());
   });
 });
